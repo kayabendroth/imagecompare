@@ -21,11 +21,17 @@
  
  ext {
 
+     // Not using 1.9 for the time being due to MANIMALSNIFFER-34.
+     animal_snifferVersion = '1.8'
      junitVersion = '4.11'
  
      libraries = [
 
+         // Animal Sniffer Ant Task and Java 1.6 API signature file.
+         animal_sniffer:   "org.codehaus.mojo:animal-sniffer-ant-tasks:${animal_snifferVersion}",
+         java15_signature: 'org.codehaus.mojo.signature:java15:1.0@signature',
+
          // JUnit.
-         junit: "junit:junit:${junitVersion}"
+         junit:            "junit:junit:${junitVersion}"
      ]
  }
