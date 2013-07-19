@@ -24,7 +24,7 @@ apply plugin: 'java'
 apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
 apply from: "./libraries.gradle"
- 
+
 ext.imagecompareTargetVersion = '1.0.0-SNAPSHOT'
 ext.javaLanguageLevel = '1.5'
 
@@ -34,12 +34,23 @@ group = 'com.github.imagecompare'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final".
-exportPackageVersion = version.replaceAll("-SNAPSHOT", "");
-exportPackageVersion = exportPackageVersion.replaceAll(".Final", "");
+ext.exportPackageVersion = version.replaceAll("-SNAPSHOT", "");
+ext.exportPackageVersion = exportPackageVersion.replaceAll(".Final", "");
+
+configurations {
+    provided {
+        description = 'Non-exported compile-time dependencies.'
+    }
+    animalSniffer
+    javaApiSignature
+}
 
 repositories { mavenCentral() }
 
 dependencies {
+    compile ( libraries.guice )
+    compile ( libraries.imgscalr )
+
     testCompile( libraries.junit )
 
     animalSniffer ( libraries.animal_sniffer )
