@@ -6,3 +6,7 @@
 *.war
 *.ear
 
+# Gradle directories.
+.gradle/
+build/
+
