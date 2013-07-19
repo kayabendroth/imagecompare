@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with imagecompare. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
  ext {
 
      guiceVersion = '3.0'
@@ -26,7 +26,7 @@
      // Not using 1.9 for the time being due to MANIMALSNIFFER-34.
      animal_snifferVersion = '1.8'
      junitVersion = '4.11'
- 
+
      libraries = [
 
          // Google Guice.
@@ -37,7 +37,7 @@
 
          // Animal Sniffer Ant Task and Java 1.5 API signature file.
          animal_sniffer:   "org.codehaus.mojo:animal-sniffer-ant-tasks:${animal_snifferVersion}",
-         java15_signature: 'org.codehaus.mojo.signature:java15:1.0@signature',
+         java16_signature: 'org.codehaus.mojo.signature:java16:1.1@signature',
 
          // JUnit.
          junit:            "junit:junit:${junitVersion}"
