@@ -71,9 +71,6 @@ test {
     jvmArgs '-XX:MaxPermSize=256m'
 }
 
-// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-eclipseClasspath.dependsOn("generateSources")
-
 task copyJavaApiSignature(type: Copy) {
     from configurations.javaApiSignature
     into "$buildDir/javaApiSignature/"
