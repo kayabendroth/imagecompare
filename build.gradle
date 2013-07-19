@@ -19,11 +19,14 @@
  * along with imagecompare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-apply plugin: 'eclipse'
 apply plugin: 'java'
+apply plugin: 'eclipse'
+apply from: "./libraries.gradle"
+
 apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
-apply from: "./libraries.gradle"
+apply plugin: 'build-dashboard'
+apply plugin: 'project-report'
 
 ext.imagecompareTargetVersion = '1.0.0-SNAPSHOT'
 ext.javaLanguageLevel = '1.5'
