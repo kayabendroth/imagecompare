@@ -94,10 +94,10 @@ checkstyleTest {
     }
 }
 
-// Enable HTML output of FindBugs too.
+// Enable HTML output of FindBugs for now.
 tasks.withType(FindBugs) {
     reports {
-        xml.enabled = true
+        xml.enabled = false
         html.enabled = true
     }
 }
