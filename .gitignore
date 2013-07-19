@@ -10,3 +10,12 @@
 .gradle/
 build/
 
+# Eclipse directories and files.
+.project
+.classpath
+.settings
+bin/
+
+# Vim swap files.
+*.swp
+
