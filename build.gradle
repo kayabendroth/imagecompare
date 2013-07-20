@@ -103,4 +103,7 @@ tasks.withType(FindBugs) {
     }
 }
 
+// We want the coverage report from JaCoCo with every call to build.
+build.dependsOn jacocoTestReport
+
 // TODO: Add task for publishing.
