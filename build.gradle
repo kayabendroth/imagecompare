@@ -23,8 +23,9 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply from: "./libraries.gradle"
 
-apply plugin: 'findbugs'
 apply plugin: 'checkstyle'
+apply plugin: 'findbugs'
+apply plugin: 'jacoco'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
