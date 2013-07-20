@@ -42,6 +42,7 @@ import org.imgscalr.Scalr;
  */
 public class SimpleImageComparisonProcessor implements ImageComparisonProcessor {
 
+
     /**
      * The lower boundary in per cent for two images to be declared as equal. Two images are
      * considered to be equal, if at least {{@literal DEFINITION_OF_EQUAL}} per cent of the two
@@ -50,32 +51,10 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
     private static final double DEFINITION_OF_EQUAL = 99.94;
 
     /**
-     * The reference image "signature" (numberOfReferencePixels * numberOfReferencePixels
-     * representative pixels, each in R,G,B). We use instances of Color to make things simpler.
-     */
-    private static Color[][] signature;
-
-    /**
-     * The width of the reference image. This value also determines the to-be-scaled-to-width of the
-     * test image.
-     */
-    private static int referenceWidth = -1;
-
-    /**
      * This is the main value setting the overall quality of the comparison as it determines the
      * number of reference pixels per image. The smaller the distance, the higher the quality.
      */
     private static final short DISTANCE_BETWEEN_REFERENCE_PIXELS = 28;
-
-    /**
-     * This number determines the total amount of reference pixels, which is
-     * numberOfReferencePixels * numberOfReferencePixels. The higher this value, the higher
-     * the overall quality of the comparison. It's determined only by
-     * DISTANCE_BETWEEN_REFERENCE_PIXELS.
-     *
-     * @see DISTANCE_BETWEEN_REFERENCE_PIXELS
-     */
-    private static int numberOfReferencePixels = -1;
 
     /**
      * This is our target sample size. It will be used to initialize {@link sampleSize}.
@@ -93,12 +72,6 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * @see org.imgscalr.Scalr.Method.BALANCED
      */
     private static final Method SCALING_METHOD = Method.BALANCED;
-
-    /**
-     * The maximum possible distance between reference image and test image. Will be computed at the
-     * beginning of the {@link compare()} method.
-     */
-    private static double maxDistance = -1;
 
     /**
      * The size of a pixel vector is three.
@@ -132,16 +105,41 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
         /**
          * Set all the values we need for the processing.
          */
-        referenceWidth = referenceImage.getWidth();
+
+        /**
+         * The width of the reference image. This value also determines the to-be-scaled-to-width
+         * of the test image.
+         */
+        final int referenceWidth = referenceImage.getWidth();
         System.err.println("Reference width is: " + referenceWidth);
         System.err.println("Reference heigth is: " + referenceImage.getHeight());
-        numberOfReferencePixels = referenceWidth / DISTANCE_BETWEEN_REFERENCE_PIXELS;
-        System.err.println("No. of reference pixels is: " + numberOfReferencePixels);
-        maxDistance = calculateMaxDistance(numberOfReferencePixels * numberOfReferencePixels);
+
+        /**
+         * This number determines the total amount of reference pixels, which is
+         * numberOfReferencePixels * numberOfReferencePixels. The higher this value, the higher
+         * the overall quality of the comparison. It's determined only by
+         * DISTANCE_BETWEEN_REFERENCE_PIXELS.
+         *
+         * @see DISTANCE_BETWEEN_REFERENCE_PIXELS
+         */
+        final int refRegionsInOneDimension = referenceWidth / DISTANCE_BETWEEN_REFERENCE_PIXELS;
+        System.err.println("No. of reference regions in one dimension is: "
+                + refRegionsInOneDimension);
+
+        /**
+         * The maximum possible distance between reference image and test image.
+         */
+        final double maxDistance =
+                calculateMaxDistance(refRegionsInOneDimension * refRegionsInOneDimension);
         System.err.println("Max. distance is: " + maxDistance);
 
-        // Calculate the signature vector for the reference.
-        signature = calcSignature(referenceImage);
+        /**
+         * The reference image "signature" (numberOfReferencePixels * numberOfReferencePixels
+         * representative pixels, each in R,G,B). We use instances of Color to make things simpler.
+         *
+         * Calculate the signature vector for the reference.
+         */
+        final Color[][] refSignature = calcSignature(referenceImage, refRegionsInOneDimension);
 
         /**
          * Re-scale the test image to match the width of our reference image. The library
@@ -169,8 +167,17 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
          */
         testImage.flush();
 
+        // Calculate the signature vector for the test image.
+        final Color[][] testSignature = calcSignature(testImageRescaled, refRegionsInOneDimension);
+
         // Calculate the distance to the other image.
-        final double distanceToReference = calcDistance(testImageRescaled);
+        double distanceToReference = -1;
+        try {
+            distanceToReference =
+                    calcDistance(testSignature, refSignature, refRegionsInOneDimension);
+        } catch (final InvalidArgumentException iae) {
+            System.err.println(iae.getMessage());
+        }
 
         // How much of the test image is identical to the reference image?
         final double percentageOfEquality =
@@ -190,19 +197,22 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * This method calculates and returns signature vectors for the input image.
      *
      * @param image The image to calculate the signature for.
+     * @param numberOfReferenceAreas The number of reference areas to be used.
      * @return A two-dimensional {@link Color} array of the size {@link numberOfReferencePixels} *
      * {@link numberOfReferencePixels}.
      */
-    public static final Color[][] calcSignature(final BufferedImage image) {
+    protected static final Color[][] calcSignature(
+            final BufferedImage image,
+            final int numberOfReferenceAreas) {
 
         // Get memory for the signature.
-        final Color[][] sig = new Color[numberOfReferencePixels][numberOfReferencePixels];
+        final Color[][] sig = new Color[numberOfReferenceAreas][numberOfReferenceAreas];
 
         /**
          * For each of the XXX signature values average the pixels around it. Note that the
          * coordinate of the central pixel is in proportions.
          */
-        final float[] prop = new float[numberOfReferencePixels];
+        final float[] prop = new float[numberOfReferenceAreas];
 
         /**
          * No we need to fill this array.
@@ -213,9 +223,9 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
          * But we want to be more dynamic. We calculate a {@literal propValueDistance} first.
          */
         final float propValueDistance =
-                (ONE_HUNDRED * 1f / (numberOfReferencePixels + 1)) / ONE_HUNDRED * 1f;
+                (ONE_HUNDRED * 1f / (numberOfReferenceAreas + 1)) / ONE_HUNDRED * 1f;
         System.err.println("propValueDistance is: " + propValueDistance);
-        for (int i = 0; i < numberOfReferencePixels; i++) {
+        for (int i = 0; i < numberOfReferenceAreas; i++) {
             prop[i] = (i + 1) * propValueDistance;
         }
 
@@ -226,17 +236,18 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
          * <p>
          * In order to prevent that, we then need to adjust the sample size.
          */
+        final int imageWidth = image.getWidth();
         final int imageHeight = image.getHeight();
         // Upper boundaries for X- and Y-axis.
-        while (prop[numberOfReferencePixels - 1] * referenceWidth + sampleSize
-                >= referenceWidth) {
+        while (prop[numberOfReferenceAreas - 1] * imageWidth + sampleSize
+                >= imageWidth) {
             sampleSize = sampleSize - 1;
         }
-        while (prop[numberOfReferencePixels - 1] * imageHeight + sampleSize >= imageHeight) {
+        while (prop[numberOfReferenceAreas - 1] * imageHeight + sampleSize >= imageHeight) {
             sampleSize = sampleSize - 1;
         }
         // Lower boundaries for X- and Y-axis.
-        while (prop[0] * referenceWidth - sampleSize <= 0) {
+        while (prop[0] * imageWidth - sampleSize <= 0) {
             sampleSize = sampleSize - 1;
         }
         while (prop[0] * imageHeight - sampleSize <= 0) {
@@ -247,8 +258,8 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
         /**
          * Then we calculate the average RGB value for every region.
          */
-        for (int x = 0; x < numberOfReferencePixels; x++) {
-            for (int y = 0; y < numberOfReferencePixels; y++) {
+        for (int x = 0; x < numberOfReferenceAreas; x++) {
+            for (int y = 0; y < numberOfReferenceAreas; y++) {
                 sig[x][y] = averageAround(image, prop[x], prop[y]);
             }
         }
@@ -265,18 +276,21 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * @param py The y-coordinate of the center of the area to inspect.
      * @return An averaged color value for the area of interest.
      */
-    private static Color averageAround(final BufferedImage image, final double px, final double py)
-    {
+    protected static Color averageAround(
+            final BufferedImage image,
+            final double px,
+            final double py) {
 
         // Get memory for raw pixel, pixel and for the accumulator.
         int rawPixel = -1;
         final double[] accum = new double[] {0, 0, 0};
 
         int numPixels = 0;
+        final int imageWidth = image.getWidth();
         final int imageHeight = image.getHeight();
         // Sample the pixels.
         // Traverse along the x-axis of the image.
-        for (double x = px * referenceWidth - sampleSize; x < px * referenceWidth + sampleSize; x++)
+        for (double x = px * imageWidth - sampleSize; x < px * imageWidth + sampleSize; x++)
         {
             // Travers along the y-axis of the image.
             for (double y = py * imageHeight - sampleSize; y < py * imageHeight + sampleSize; y++) {
@@ -303,27 +317,49 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * This method calculates the distance between the signatures of an image and the reference one.
      * The signatures for the image passed as the parameter are calculated inside the method.
      *
-     * @param other The "other" image to test.
+     * @param source The source signature array.
+     * @param target The target signature array.
+     * @param refRegionsInOneDimension The number of reference regions in one dimension.
      * @return The calculated distance to the other image.
+     * @throws InvalidArgumentException If the source or target array length doesn't match
+     * refRegionsInOneDimension or if refRegionsInOneDimension is smaller than zero.
      */
-    public static final double calcDistance(final BufferedImage other) {
+    protected static final double calcDistance(
+            final Color[][] source,
+            final Color[][] target,
+            final int refRegionsInOneDimension) throws InvalidArgumentException {
 
-        // Calculate the signature for that image.
-        final Color[][] sigOther = calcSignature(other);
+        // We can return zero immediately, if the number of reference regions is zero.
+        if (refRegionsInOneDimension == 0) { return 0; }
+        // Length of source and target array has to match number of regions.
+        if (source.length != refRegionsInOneDimension) {
+            throw new InvalidArgumentException(
+                    "Source array length doesn't match number of regions.");
+        }
+        if (target.length != refRegionsInOneDimension) {
+            throw new InvalidArgumentException(
+                    "Target array length doesn't match number of regions.");
+        }
+        // Number of reference regions must be higher or equal than zero.
+        if (refRegionsInOneDimension < 0) {
+            throw new InvalidArgumentException(
+                    "Number of reference regions must be zero or higher.");
+        }
+
 
         /**
          * There are several ways to calculate distances between two vectors, we will calculate the
          * sum of the distances between the RGB values of pixels in the same positions.
          */
         double dist = 0;
-        for (int x = 0; x < numberOfReferencePixels; x++) {
-            for (int y = 0; y < numberOfReferencePixels; y++) {
-                final int r1 = signature[x][y].getRed();
-                final int g1 = signature[x][y].getGreen();
-                final int b1 = signature[x][y].getBlue();
-                final int r2 = sigOther[x][y].getRed();
-                final int g2 = sigOther[x][y].getGreen();
-                final int b2 = sigOther[x][y].getBlue();
+        for (int x = 0; x < refRegionsInOneDimension; x++) {
+            for (int y = 0; y < refRegionsInOneDimension; y++) {
+                final int r1 = source[x][y].getRed();
+                final int g1 = target[x][y].getGreen();
+                final int b1 = source[x][y].getBlue();
+                final int r2 = target[x][y].getRed();
+                final int g2 = source[x][y].getGreen();
+                final int b2 = target[x][y].getBlue();
                 final double tempDist = Math.sqrt((r1 - r2) * (r1 - r2) + (g1 - g2)
                         * (g1 - g2) + (b1 - b2) * (b1 - b2));
                 dist += tempDist;
@@ -341,7 +377,7 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * @return The maximum distance possible as a double value or -1, if the number of regions is
      * below zero.
      */
-    public static final double calculateMaxDistance(final int numberOfRegions) {
+    protected static final double calculateMaxDistance(final int numberOfRegions) {
 
         if (numberOfRegions < 0) { return -1; }
 
@@ -364,7 +400,7 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * @return A double array containing the RGB values.
      * @see http://sanjaal.com/java/tag/java-image-get-pixel-information/
      */
-    public static final double[] getRgbArrayFromPixel(final int pixel) {
+    protected static final double[] getRgbArrayFromPixel(final int pixel) {
 
         final double[] rgbArray = new double[PIXEL_VECTOR_SIZE];
 

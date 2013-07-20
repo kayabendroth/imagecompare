@@ -20,22 +20,29 @@
  */
 package com.github.kayabendroth.imagecompare;
 
-import com.google.inject.AbstractModule;
-
 
 /**
- * This module binds the interfaces to their implementations using Google Guice.
+ * Exception class for invalid arguments.
  *
  * @author kay.abendroth@raxion.net (Kay Abendroth)
  * @since 1.0.0
  */
-public class ImageComparisonModule extends AbstractModule {
+public final class InvalidArgumentException extends Exception {
 
 
-    @Override
-    protected final void configure() {
+    /**
+     * We start with a version id of zero, even though we might not need serialization.
+     */
+    public static final long serialVersionUID = 0;
 
-        bind(ImageComparisonService.class).to(ImageComparison.class);
-        bind(ImageComparisonProcessor.class).to(SimpleImageComparisonProcessor.class);
+
+    /**
+     * Constructor for this class.
+     *
+     * @param message The message to be stored in this exception.
+     */
+    public InvalidArgumentException(final String message) {
+
+        super(message);
     }
 }
