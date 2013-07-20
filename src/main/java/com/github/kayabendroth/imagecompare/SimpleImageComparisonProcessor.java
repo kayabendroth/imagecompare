@@ -197,22 +197,22 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      * This method calculates and returns signature vectors for the input image.
      *
      * @param image The image to calculate the signature for.
-     * @param numberOfReferenceAreas The number of reference areas to be used.
+     * @param refRegionsInOneDimension The number of reference areas to be used.
      * @return A two-dimensional {@link Color} array of the size {@link numberOfReferencePixels} *
      * {@link numberOfReferencePixels}.
      */
     protected static final Color[][] calcSignature(
             final BufferedImage image,
-            final int numberOfReferenceAreas) {
+            final int refRegionsInOneDimension) {
 
         // Get memory for the signature.
-        final Color[][] sig = new Color[numberOfReferenceAreas][numberOfReferenceAreas];
+        final Color[][] sig = new Color[refRegionsInOneDimension][refRegionsInOneDimension];
 
         /**
          * For each of the XXX signature values average the pixels around it. Note that the
          * coordinate of the central pixel is in proportions.
          */
-        final float[] prop = new float[numberOfReferenceAreas];
+        final float[] prop = new float[refRegionsInOneDimension];
 
         /**
          * No we need to fill this array.
@@ -223,9 +223,9 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
          * But we want to be more dynamic. We calculate a {@literal propValueDistance} first.
          */
         final float propValueDistance =
-                (ONE_HUNDRED * 1f / (numberOfReferenceAreas + 1)) / ONE_HUNDRED * 1f;
+                (ONE_HUNDRED * 1f / (refRegionsInOneDimension + 1)) / ONE_HUNDRED * 1f;
         System.err.println("propValueDistance is: " + propValueDistance);
-        for (int i = 0; i < numberOfReferenceAreas; i++) {
+        for (int i = 0; i < refRegionsInOneDimension; i++) {
             prop[i] = (i + 1) * propValueDistance;
         }
 
@@ -239,11 +239,11 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
         final int imageWidth = image.getWidth();
         final int imageHeight = image.getHeight();
         // Upper boundaries for X- and Y-axis.
-        while (prop[numberOfReferenceAreas - 1] * imageWidth + sampleSize
+        while (prop[refRegionsInOneDimension - 1] * imageWidth + sampleSize
                 >= imageWidth) {
             sampleSize = sampleSize - 1;
         }
-        while (prop[numberOfReferenceAreas - 1] * imageHeight + sampleSize >= imageHeight) {
+        while (prop[refRegionsInOneDimension - 1] * imageHeight + sampleSize >= imageHeight) {
             sampleSize = sampleSize - 1;
         }
         // Lower boundaries for X- and Y-axis.
@@ -258,8 +258,8 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
         /**
          * Then we calculate the average RGB value for every region.
          */
-        for (int x = 0; x < numberOfReferenceAreas; x++) {
-            for (int y = 0; y < numberOfReferenceAreas; y++) {
+        for (int x = 0; x < refRegionsInOneDimension; x++) {
+            for (int y = 0; y < refRegionsInOneDimension; y++) {
                 sig[x][y] = averageAround(image, prop[x], prop[y]);
             }
         }
@@ -372,16 +372,17 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
     /**
      * Calculate the maximum distance between two images depending on the number of regions used.
      *
-     * @param numberOfRegions The number of regions used to compute the differences between two
+     * @param totalNumberOfRefRegions The number of regions used to compute the differences between
+     * two
      * images.
      * @return The maximum distance possible as a double value or -1, if the number of regions is
      * below zero.
      */
-    protected static final double calculateMaxDistance(final int numberOfRegions) {
+    protected static final double calculateMaxDistance(final int totalNumberOfRefRegions) {
 
-        if (numberOfRegions < 0) { return -1; }
+        if (totalNumberOfRefRegions < 0) { return -1; }
 
-        return numberOfRegions * MAX_DISTANCE_MULTIPLIER;
+        return totalNumberOfRefRegions * MAX_DISTANCE_MULTIPLIER;
     }
 
     /**
