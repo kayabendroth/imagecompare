@@ -115,6 +115,15 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      */
     private static final int MAX_RGB_VALUE = 255;
 
+    /**
+     * To calculate the maximum possible distance between two images, we need a multiplier, which
+     * is based on the vector size and the maximum RGB value.
+     */
+    private static final double MAX_DISTANCE_MULTIPLIER =
+            (Math.sqrt((MAX_RGB_VALUE - 0) * (MAX_RGB_VALUE - 0)
+                     + (MAX_RGB_VALUE - 0) * (MAX_RGB_VALUE - 0)
+                     + (MAX_RGB_VALUE - 0) * (MAX_RGB_VALUE - 0)));
+
 
     @Override
     public final boolean compare(final BufferedImage testImage,
@@ -261,8 +270,7 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
 
         // Get memory for raw pixel, pixel and for the accumulator.
         int rawPixel = -1;
-        double[] pixel = new double[PIXEL_VECTOR_SIZE];
-        final double[] accum = new double[PIXEL_VECTOR_SIZE];
+        final double[] accum = new double[] {0, 0, 0};
 
         int numPixels = 0;
         final int imageHeight = image.getHeight();
@@ -275,7 +283,7 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
                 // Get the raw pixel value for the current pixel first.
                 rawPixel = image.getRGB((int) x, (int) y);
                 // Convert this to a double array.
-                pixel = getRgbArrayFromPixel(rawPixel);
+                final double[] pixel = getRgbArrayFromPixel(rawPixel);
                 accum[0] += pixel[0];
                 accum[1] += pixel[1];
                 accum[2] += pixel[2];
@@ -330,15 +338,14 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
      *
      * @param numberOfRegions The number of regions used to compute the differences between two
      * images.
-     * @return The maximum distance possible as a double value.
+     * @return The maximum distance possible as a double value or -1, if the number of regions is
+     * below zero.
      */
     public static final double calculateMaxDistance(final int numberOfRegions) {
 
         if (numberOfRegions < 0) { return -1; }
 
-        return numberOfRegions * (Math.sqrt((MAX_RGB_VALUE - 0) * (MAX_RGB_VALUE - 0)
-                                          + (MAX_RGB_VALUE - 0) * (MAX_RGB_VALUE - 0)
-                                          + (MAX_RGB_VALUE - 0) * (MAX_RGB_VALUE - 0)));
+        return numberOfRegions * MAX_DISTANCE_MULTIPLIER;
     }
 
     /**
