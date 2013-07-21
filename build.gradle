@@ -29,6 +29,8 @@ apply plugin: 'jacoco'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
+apply plugin: 'distribution'
+
 ext.imagecompareTargetVersion = '1.0.0-SNAPSHOT'
 ext.javaLanguageLevel = '1.6'
 
@@ -38,11 +40,17 @@ group = 'com.github.kayabendroth.imagecompare'
 // Compiler options.
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-// Set the version for Gradle.
-project.version = rootProject.imagecompareTargetVersion
-// The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final".
-ext.exportPackageVersion = version.replaceAll("-SNAPSHOT", "");
-ext.exportPackageVersion = exportPackageVersion.replaceAll(".Final", "");
+// Set the version for Gradle and our package.
+gradle.taskGraph.whenReady {taskGraph ->
+    if (taskGraph.hasTask(release)) {
+        // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final".
+        final String cleanVersion = rootProject.imagecompareTargetVersion.replaceAll("-SNAPSHOT", "").replaceAll(".Final", "");
+        project.version = cleanVersion;
+    } else {
+        project.version = rootProject.imagecompareTargetVersion
+    }
+    ext.exportPackageVersion = project.version
+}
 
 configurations {
     provided {
@@ -110,3 +118,10 @@ tasks.withType(FindBugs) {
 build.dependsOn jacocoTestReport
 
 // TODO: Add task for publishing.
+
+task dist << {}
+distTar.dependsOn build
+dist.dependsOn distTar
+
+task release << {}
+release.dependsOn dist
