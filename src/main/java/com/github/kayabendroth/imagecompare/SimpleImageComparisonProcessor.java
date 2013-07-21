@@ -44,11 +44,10 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
 
 
     /**
-     * The lower boundary in per cent for two images to be declared as equal. Two images are
-     * considered to be equal, if at least {{@literal DEFINITION_OF_EQUAL}} per cent of the two
-     * images are identical.
+     * Overrides {@link ImageComparisonProcessor.DEFAULT_DEFINITION_OF_EQUAL}, if user hands-over
+     * her or his own equality percentage value.
      */
-    private static final double DEFINITION_OF_EQUAL = 99.94;
+    private double myDefinitionOfEqual = -1;
 
     /**
      * This is the main value setting the overall quality of the comparison as it determines the
@@ -99,12 +98,22 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
 
 
     @Override
-    public final boolean compare(final BufferedImage testImage,
-            final BufferedImage referenceImage) {
+    public final boolean compare(
+            final BufferedImage testImage,
+            final BufferedImage referenceImage,
+            final double definitionOfEqual) throws InvalidArgumentException {
 
         /**
-         * Set all the values we need for the processing.
+         * Set all the values we need for the processing, starting with the definition of equal.
+         *
+         * Definition of equal is not allowed to be lower than zero or higher than one hundred.
          */
+        if (definitionOfEqual < 0 || definitionOfEqual > ONE_HUNDRED) {
+            throw new InvalidArgumentException("Minmum percentage for equality is not allowed to "
+                    + "be lower than zero or higher than one hundred.");
+        }
+
+        myDefinitionOfEqual = definitionOfEqual;
 
         /**
          * The width of the reference image. This value also determines the to-be-scaled-to-width
@@ -186,11 +195,24 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
 
         /**
          * The two images are considered to be equal, if the test image is identical to the
-         * reference image for at least the amount of {{@link DEFINITION_OF_EQUAL}}.
+         * reference image for at least the amount of {{@link DEFAULT_DEFINITION_OF_EQUAL}}.
          *
-         * @see DEFINITION_OF_EQUAL
+         * @see DEFAULT_DEFINITION_OF_EQUAL
          */
-        return (percentageOfEquality >= DEFINITION_OF_EQUAL);
+        return (percentageOfEquality >= myDefinitionOfEqual);
+    }
+
+    @Override
+    public final boolean compare(final BufferedImage testImage, final BufferedImage referenceImage)
+    {
+        boolean areEqual = false;
+        try {
+            areEqual = compare(testImage, referenceImage, DEFAULT_DEFINITION_OF_EQUAL);
+        } catch (final InvalidArgumentException iae) {
+            System.err.println(iae.getMessage());
+        }
+
+        return areEqual;
     }
 
     /**
