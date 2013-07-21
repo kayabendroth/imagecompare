@@ -32,11 +32,14 @@ apply plugin: 'project-report'
 ext.imagecompareTargetVersion = '1.0.0-SNAPSHOT'
 ext.javaLanguageLevel = '1.6'
 
-group = 'com.github.imagecompare'
+// Set the group.
+group = 'com.github.kayabendroth.imagecompare'
 
 // Compiler options.
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
+// Set the version for Gradle.
+project.version = rootProject.imagecompareTargetVersion
 // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final".
 ext.exportPackageVersion = version.replaceAll("-SNAPSHOT", "");
 ext.exportPackageVersion = exportPackageVersion.replaceAll(".Final", "");
