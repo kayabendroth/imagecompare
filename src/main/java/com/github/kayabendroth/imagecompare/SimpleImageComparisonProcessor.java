@@ -181,12 +181,7 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
 
         // Calculate the distance to the other image.
         double distanceToReference = -1;
-        try {
-            distanceToReference =
-                    calcDistance(testSignature, refSignature, refRegionsInOneDimension);
-        } catch (final InvalidArgumentException iae) {
-            System.err.println(iae.getMessage());
-        }
+        distanceToReference = calcDistance(testSignature, refSignature, refRegionsInOneDimension);
 
         // How much of the test image is identical to the reference image?
         final double percentageOfEquality =
@@ -353,6 +348,11 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
 
         // We can return zero immediately, if the number of reference regions is zero.
         if (refRegionsInOneDimension == 0) { return 0; }
+        // Number of reference regions must be higher or equal than zero.
+        if (refRegionsInOneDimension < 0) {
+            throw new InvalidArgumentException(
+                    "Number of reference regions must be zero or higher.");
+        }
         // Length of source and target array has to match number of regions.
         if (source.length != refRegionsInOneDimension) {
             throw new InvalidArgumentException(
@@ -361,11 +361,6 @@ public class SimpleImageComparisonProcessor implements ImageComparisonProcessor 
         if (target.length != refRegionsInOneDimension) {
             throw new InvalidArgumentException(
                     "Target array length doesn't match number of regions.");
-        }
-        // Number of reference regions must be higher or equal than zero.
-        if (refRegionsInOneDimension < 0) {
-            throw new InvalidArgumentException(
-                    "Number of reference regions must be zero or higher.");
         }
 
 

@@ -22,6 +22,7 @@ package com.github.kayabendroth.imagecompare;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.Color;
 
@@ -42,6 +43,68 @@ import com.github.kayabendroth.imagecompare.SimpleImageComparisonProcessor;
 @RunWith(JUnit4.class)
 public class SimpleImageComparisonProcessorTest {
 
+
+    @Test
+    public final void checkCalcDistance() {
+
+        final Color[][] lengthZero = new Color[0][0];
+        final Color[][] lengthOne = new Color[1][1];
+        final Color[][] lengthFive = new Color[5][5];
+        final int fiveRefRegions = 5;
+
+        // Zero will be returned immediately, if refRegionsInOneDimension is zero.
+        double actual = -1;
+        try {
+            actual = SimpleImageComparisonProcessor.calcDistance(lengthZero, lengthZero, 0);
+        } catch (final InvalidArgumentException iae) {
+            assertTrue(iae.getMessage(), false);
+        }
+        assertEquals("Zero will be returned immediately, if refRegionsInOneDimension is zero.",
+                0.0,
+                actual,
+                0);
+
+        // Exception will be thrown, if length of source and target array don't match number of regions.
+        actual = -1;
+        InvalidArgumentException actualException = null;
+        String expectedExceptionMessage = "Source array length doesn't match number of regions.";
+        try {
+            actual = SimpleImageComparisonProcessor.calcDistance(lengthZero, lengthFive, fiveRefRegions);
+        } catch (final InvalidArgumentException iae) {
+            actualException = iae;
+        }
+        assertTrue("Exception is not null.", actualException != null);
+        assertEquals("Exception will be thrown, if length of source and target array don't match number of regions.",
+                expectedExceptionMessage,
+                actualException.getMessage());
+
+        actual = -1;
+        actualException = null;
+        expectedExceptionMessage = "Target array length doesn't match number of regions.";
+        try {
+            actual = SimpleImageComparisonProcessor.calcDistance(lengthFive, lengthOne, fiveRefRegions);
+        } catch (final InvalidArgumentException iae) {
+            actualException = iae;
+        }
+        assertTrue("Exception is not null.", actualException != null);
+        assertEquals("Exception will be thrown, if length of source and target array don't match number of regions.",
+                expectedExceptionMessage,
+                actualException.getMessage());
+
+        // Number of reference regions is not allowed to be below zero.
+        actual = -1;
+        actualException = null;
+        expectedExceptionMessage = "Number of reference regions must be zero or higher.";
+        try {
+            actual = SimpleImageComparisonProcessor.calcDistance(lengthFive, lengthFive, -111);
+        } catch (final InvalidArgumentException iae) {
+            actualException = iae;
+        }
+        assertTrue("Exception is not null.", actualException != null);
+        assertEquals("Exception will be thrown, if length of source and target array don't match number of regions.",
+                expectedExceptionMessage,
+                actualException.getMessage());
+    }
 
     @Test
     public final void checkCalculateMaxDistance() {

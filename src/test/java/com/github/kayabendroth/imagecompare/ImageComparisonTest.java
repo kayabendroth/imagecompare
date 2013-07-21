@@ -20,6 +20,7 @@
  */
 package com.github.kayabendroth.imagecompare;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -172,5 +173,88 @@ public class ImageComparisonTest {
         // Test unsuccessful comparison: Pictures are not identical and differences are not within our accepted boundaries.
         final boolean result = imageComparisonService.compare(testImage, referenceImage);
         assertFalse("Test unsuccessful comparison: Picture from man in front of a wall with plate and picture from man in front of a wall w/o plate is not within our accepted boundaries.", result);
+    }
+
+    @Test
+    public final void checkCompareWithOwnPercentage() {
+
+        // Minmum equal percentage cannot be below zero.
+        final Injector injector = Guice.createInjector(new ImageComparisonModule());
+        final ImageComparisonService imageComparisonService = injector.getInstance(ImageComparisonService.class);
+
+        InvalidArgumentException toTest = null;
+        final String expectedMessageBelowZeroOrAboveOneHundred = "Minmum percentage for equality is not allowed to be lower than zero or higher than one hundred.";
+        try {
+            imageComparisonService.compare(null, null, -1.0);
+        } catch (final InvalidArgumentException iae) {
+            toTest = iae;
+        }
+        assertTrue("Exception is not null.", toTest != null);
+        assertEquals("Exception message is as expected", expectedMessageBelowZeroOrAboveOneHundred, toTest.getMessage());
+
+        // Minmum equal percentage cannot be higher than one hundred.
+        toTest = null;
+        try {
+            imageComparisonService.compare(null, null, 111);
+        } catch (final InvalidArgumentException iae) {
+            toTest = iae;
+        }
+        assertTrue("Exception is not null.", toTest != null);
+        assertEquals("Exception message is as expected", expectedMessageBelowZeroOrAboveOneHundred, toTest.getMessage());
+
+        // Identical images are identified as identical with highest percentage also.
+        BufferedImage googleReferenceImage;
+        BufferedImage googleIdenticalImage;
+        googleIdenticalImage = googleReferenceImage = null;
+
+        try {
+            googleReferenceImage = ImageIO.read(ImageComparisonTest.class.getResourceAsStream(googleReference));
+            googleIdenticalImage = ImageIO.read(ImageComparisonTest.class.getResourceAsStream(googleIdentical));
+        } catch (final IOException ioe) {
+            assertTrue(ioe.getMessage(), false);
+        } catch (final IllegalArgumentException iae) {
+            assertTrue(iae.getMessage(), false);
+        }
+
+        // Both images are not null.
+        assertTrue("Google reference image is not null", googleReferenceImage != null);
+        assertTrue("Google test image is not null", googleIdenticalImage != null);
+
+        boolean result = false;
+        try {
+            result = imageComparisonService.compare(googleIdenticalImage, googleReferenceImage, 100);
+        } catch (final InvalidArgumentException iae) {
+            assertTrue(iae.getMessage(), false);
+        }
+        assertTrue("Identical images are identified as identical with highest percentage also.", result);
+        googleIdenticalImage = googleReferenceImage = null;
+
+
+        // Images with a small difference will not be identified as identical with low percentage.
+        BufferedImage referenceImage;
+        BufferedImage testImage;
+        referenceImage = testImage = null;
+
+        try {
+            referenceImage = ImageIO.read(ImageComparisonTest.class.getResourceAsStream(manWallWithPlate));
+            testImage = ImageIO.read(ImageComparisonTest.class.getResourceAsStream(manWallWithoutPlate));
+        } catch (final IOException ioe) {
+            assertTrue(ioe.getMessage(), false);
+        } catch (final IllegalArgumentException iae) {
+            assertTrue(iae.getMessage(), false);
+        }
+
+        // Both images are not null.
+        assertTrue("Reference image is not null", referenceImage != null);
+        assertTrue("Test image is not null", testImage != null);
+
+        result = false;
+        try {
+            result = imageComparisonService.compare(testImage, referenceImage, 50);
+        } catch (final InvalidArgumentException iae) {
+            assertTrue(iae.getMessage(), false);
+        }
+        assertTrue("Images with a small difference will not be identified as identical with low percentage.", result);
+        referenceImage = testImage = null;
     }
 }
