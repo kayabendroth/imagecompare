@@ -58,4 +58,14 @@ public class ImageComparison implements ImageComparisonService {
         final boolean result = proc.compare(testImage, referenceImage);
         return result;
     }
+
+    @Override
+    public final boolean compare(
+            final BufferedImage testImage,
+            final BufferedImage referenceImage,
+            final double minEqualPercentage) throws InvalidArgumentException {
+
+        final boolean result = proc.compare(testImage, referenceImage, minEqualPercentage);
+        return result;
+    }
 }

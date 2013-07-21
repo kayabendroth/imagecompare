@@ -63,6 +63,8 @@ public interface ImageComparisonProcessor {
      * @throws InvalidArgumentException If {@literal minEqualPercentage} is lower than zero or
      * higher than one hundred.
      */
-    boolean compare(BufferedImage testImage, BufferedImage referenceImage,
+    boolean compare(
+            BufferedImage testImage,
+            BufferedImage referenceImage,
             double minEqualPercentage) throws InvalidArgumentException;
 }

@@ -40,4 +40,21 @@ public interface ImageComparisonService {
      * @return {@literal true}, if the test image is 95 per cent identical to the reference image.
      */
     boolean compare(BufferedImage testImage, BufferedImage referenceImage);
+
+    /**
+     * Compare two images with configurable minimum percentage of equality.
+     *
+     * @param testImage The image you want to test.
+     * @param referenceImage The reference image for the test.
+     * @param minEqualPercentage The per cent value definining whether or not the two images are to
+     * be considered equal.
+     * @return {@literal true}, if the test image is at least {@literal minEqualPercentage} per cent
+     * identical to the reference image.
+     * @throws InvalidArgumentException If {@literal minEqualPercentage} is lower than zero or
+     * higher than one hundred.
+     */
+    boolean compare(
+            BufferedImage testImage,
+            BufferedImage referenceImage,
+            double minEqualPercentage) throws InvalidArgumentException;
 }
