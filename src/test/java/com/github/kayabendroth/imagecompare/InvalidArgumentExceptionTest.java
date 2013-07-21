@@ -31,11 +31,11 @@ import com.github.kayabendroth.imagecompare.InvalidArgumentException;
 
 
 /**
- * Tests for methods provided by {@link SimpleImageComparisonProcessor}.
+ * Tests for methods provided by {@link InvalidArgumentException}.
  *
  * @author kay.abendroth@raxion.net (Kay Abendroth)
  * @since 1.0.0
- * @see SimpleImageComparisonProcessor
+ * @see InvalidArgumentException
  */
 @RunWith(JUnit4.class)
 public class InvalidArgumentExceptionTest {
